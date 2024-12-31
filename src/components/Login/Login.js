@@ -1,16 +1,42 @@
 // Login.js
 import React, { useState } from 'react';
 import './Login.css';
+import server from '../../services/ServerService';
+import LoginService from '../../services/LoginService';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  if (LoginService.isLoggedIn) {
+    window.location.href = '/';
+  }
+
+  const [user, setEmail] = useState('');
+  const [pass, setPassword] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aqui você pode adicionar a lógica de autenticação
-    console.log('Email:', email);
-    console.log('Password:', password);
+    const usuario = {
+      user,
+      pass
+    }
+
+    try {
+      const response = await server.post('/api/accounts/check-pass', usuario);
+      console.log(response);
+
+      if (!response?.id) {
+        alert('Usuário ou senha inválidos');
+        return;
+      }
+
+      // Handle successful login 
+      LoginService.login(response.id);
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -20,14 +46,14 @@ function Login() {
         <input
           type="email"
           placeholder="Email"
-          value={email}
+          value={user}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
           placeholder="Senha"
-          value={password}
+          value={pass}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
